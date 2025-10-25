@@ -1,435 +1,464 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juego Interactivo: Creatividad Lingüística</title>
-    <!-- Carga de Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Carga de Lucide Icons (Íconos modernos) -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        /* Definición de colores pastel */
-        :root {
-            --color-blue-soft: #a8d5e5;
-            --color-orange-soft: #ffb799;
-            --color-pastel-bg: #f5f8fa;
-            --color-pastel-text: #4a5568;
-            --color-correct: #81c784; /* Verde suave para la respuesta */
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Juego Interactivo: Creatividad Lingüística y Producción Textual</title>
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--color-pastel-bg);
-            transition: background-color 0.3s ease;
-        }
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Fuente -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet"/>
 
-        .slide-container {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            perspective: 1000px;
-            scroll-snap-align: start;
-        }
+  <style>
+    :root{
+      --brand-1:#2563eb; /* azul */
+      --brand-2:#fb923c; /* naranja */
+      --ok:#22c55e;
+      --bad:#ef4444;
+      --soft:#f8fafc;
+    }
+    html, body { font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background: var(--soft); }
+    .card {
+      background: #fff;
+      border-radius: 1.25rem;
+      box-shadow: 0 12px 30px rgba(2,6,23,.08);
+    }
+    .option {
+      border: 2px solid #e5e7eb;
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease, background .15s ease;
+    }
+    .option:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(2,6,23,.06); }
+    .option.correct { border-color: var(--ok); background: #ecfdf5; }
+    .option.incorrect { border-color: var(--bad); background: #fef2f2; }
+    .option.correct .badge { background: var(--ok); color: #fff; }
+    .option.incorrect .badge { background: var(--bad); color:#fff; }
 
-        .slide {
-            width: 90%;
-            max-width: 1024px;
-            min-height: 580px;
-            padding: 2.5rem;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            background-color: white;
-            transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.6s;
-            position: relative;
-            transform-origin: center;
-        }
+    /* Animaciones feedback */
+    @keyframes pulseGood { 0%{transform:scale(1);} 50%{transform:scale(1.02);} 100%{transform:scale(1);} }
+    @keyframes shakeBad {
+      0%,100%{ transform: translateX(0); }
+      20%{ transform: translateX(-6px); }
+      40%{ transform: translateX(6px); }
+      60%{ transform: translateX(-4px); }
+      80%{ transform: translateX(4px); }
+    }
+    .pulse { animation: pulseGood .6s ease; }
+    .shake { animation: shakeBad .35s ease; }
 
-        /* Estilo para las opciones gamificadas */
-        .option-card {
-            background-color: #ffffff;
-            border: 2px solid var(--color-blue-soft);
-            border-radius: 12px;
-            padding: 1.2rem;
-            margin-bottom: 1rem;
-            /* La interacción de clic se mantiene para fines estéticos si el profesor lo permite */
-            cursor: pointer; 
-            transition: all 0.2s ease-in-out;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            display: flex;
-            align-items: center;
-            opacity: 1; /* Asegura visibilidad inicial */
-        }
+    /* Botón principal */
+    .btn {
+      display:inline-flex; align-items:center; gap:.5rem;
+      padding:.85rem 1.25rem; border-radius:9999px; font-weight:700;
+      transition: transform .12s ease, box-shadow .2s ease, background .2s ease;
+    }
+    .btn:active{ transform: scale(.98); }
+    .btn-primary{ background: var(--brand-1); color:#fff; }
+    .btn-primary:hover{ background:#1d4ed8; box-shadow:0 8px 22px rgba(37,99,235,.25); }
+    .btn-muted{ background:#f1f5f9; }
+    .btn-muted:hover{ background:#e5e7eb; }
 
-        .option-card:hover:not(.is-correct) {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
-        }
-        
-        /* Nueva clase para mostrar la respuesta correcta por botón */
-        .is-correct {
-            background-color: var(--color-correct) !important;
-            border-color: #4caf50 !important;
-            color: white !important;
-            font-weight: 600;
-            animation: pulse-correct 1.5s 1 alternate; /* La animación se ejecuta una sola vez al revelar */
-        }
+    /* Progress bar */
+    .progress { height: 10px; background: #e5e7eb; border-radius: 9999px; overflow: hidden; }
+    .progress > span { display:block; height:100%; background: linear-gradient(90deg, var(--brand-1), #38bdf8); }
 
-        @keyframes pulse-correct {
-            0% {
-                transform: scale(1);
-                box-shadow: 0 0 10px var(--color-correct);
-            }
-            100% {
-                transform: scale(1.01);
-                box-shadow: 0 0 20px var(--color-correct);
-            }
-        }
+    /* Encabezado con imagen */
+    .hero {
+      background: linear-gradient(120deg, rgba(37,99,235,.08), rgba(251,146,60,.08));
+      border-bottom: 1px solid #e5e7eb;
+      backdrop-filter: blur(4px);
+    }
+    .hero-img {
+      background-size: cover; background-position: center;
+      border-radius: 1.25rem;
+      min-height: 180px;
+    }
 
-        /* Estilo de la portada */
-        .cover-slide {
-            background: linear-gradient(135deg, var(--color-pastel-bg), #dbeafe);
-        }
+    /* Tarjetas de opciones accesibles */
+    .option:focus{ outline: 3px solid #93c5fd; outline-offset: 3px; }
 
-        /* Estilo del cierre */
-        .closing-slide {
-            background: linear-gradient(45deg, #ffedd5, var(--color-orange-soft));
-        }
-
-        /* Responsive Layout for Options */
-        @media (min-width: 768px) {
-            .options-grid {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 1.5rem;
-            }
-            .option-card {
-                margin-bottom: 0; 
-            }
-        }
-        
-        .question-text {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 2rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 3px solid var(--color-orange-soft);
-            text-align: center;
-        }
-    </style>
+    /* Pie de foto pequeñito para créditos */
+    .caption { font-size: .75rem; color:#6b7280; }
+  </style>
 </head>
-<body id="presentation-body">
+<body class="min-h-screen">
 
-    <!-- Contenedor principal de diapositivas -->
-    <div class="space-y-12 pb-12">
-
-        <!-- Diapositiva 1: Portada -->
-        <div class="slide-container cover-slide">
-            <div class="slide text-center flex flex-col justify-center items-center">
-                <div class="text-7xl font-extrabold text-gray-800 mb-6 tracking-tight">
-                    Juego Interactivo
-                </div>
-                <h1 class="text-4xl md:text-5xl font-light text-blue-800 mb-10 border-b-4 border-blue-500 pb-3">
-                    Creatividad Lingüística y Producción Textual
-                </h1>
-                <div class="text-2xl text-gray-600 mb-10">
-                    Diseñado por <span class="font-semibold text-orange-600">Katherine Giraldo Zuluaga</span>
-                </div>
-                
-                <!-- Imagen/Icono inspirador (Creatividad/Ideas) -->
-                <div class="p-4 bg-orange-soft rounded-full inline-block shadow-xl">
-                    <i data-lucide="sparkles" class="w-16 h-16 text-white" style="stroke-width: 2.5;"></i>
-                </div>
-                <p class="mt-8 text-lg text-gray-500 italic">"Donde las palabras se vuelven arte."</p>
-            </div>
-        </div>
-
-        <!-- Diapositivas de Preguntas (Juego) -->
-
-        <!-- Pregunta 1 -->
-        <div class="slide-container">
-            <div class="slide">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-3xl font-bold text-orange-600">Pregunta 1/5</h2>
-                    <i data-lucide="book-open-check" class="w-8 h-8 text-blue-500"></i>
-                </div>
-                <p class="question-text">
-                    ¿Qué es la **creatividad lingüística**?
-                </p>
-
-                <div class="options-grid mt-8" id="question-1">
-                    <div class="option-card" data-correct="false" data-answer-id="1A">
-                        <span class="mr-3 font-bold text-orange-500">A.</span>
-                        <p>La capacidad de repetir oraciones correctamente</p>
-                    </div>
-                    <div class="option-card" data-correct="true" data-answer-id="1B">
-                        <span class="mr-3 font-bold text-orange-500">B.</span>
-                        <p>La habilidad de jugar con el lenguaje para crear expresiones nuevas</p>
-                    </div>
-                    <div class="option-card" data-correct="false" data-answer-id="1C">
-                        <span class="mr-3 font-bold text-orange-500">C.</span>
-                        <p>El uso rígido de las normas gramaticales</p>
-                    </div>
-                    <div class="option-card" data-correct="false" data-answer-id="1D">
-                        <span class="mr-3 font-bold text-orange-500">D.</span>
-                        <p>La memorización de textos</p>
-                    </div>
-                </div>
-                
-                <div class="mt-10 text-center">
-                    <button onclick="revealAnswer('question-1', '1B')" class="reveal-button bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105 flex items-center justify-center mx-auto">
-                        <i data-lucide="check-square" class="w-5 h-5 mr-2"></i>
-                        Mostrar Respuesta Correcta
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Pregunta 2 -->
-        <div class="slide-container">
-            <div class="slide">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-3xl font-bold text-orange-600">Pregunta 2/5</h2>
-                    <i data-lucide="users" class="w-8 h-8 text-blue-500"></i>
-                </div>
-                <p class="question-text">
-                    ¿Qué elemento fomenta la **creatividad en el aula** según Elisondo (2015)?
-                </p>
-
-                <div class="options-grid mt-8" id="question-2">
-                    <div class="option-card" data-correct="false" data-answer-id="2A">
-                        <span class="mr-3 font-bold text-orange-500">A.</span>
-                        <p>La repetición constante</p>
-                    </div>
-                    <div class="option-card" data-correct="false" data-answer-id="2B">
-                        <span class="mr-3 font-bold text-orange-500">B.</span>
-                        <p>El castigo ante el error</p>
-                    </div>
-                    <div class="option-card" data-correct="true" data-answer-id="2C">
-                        <span class="mr-3 font-bold text-orange-500">C.</span>
-                        <p>El ambiente flexible y motivador</p>
-                    </div>
-                    <div class="option-card" data-correct="false" data-answer-id="2D">
-                        <span class="mr-3 font-bold text-orange-500">D.</span>
-                        <p>Las tareas mecánicas</p>
-                    </div>
-                </div>
-                
-                <div class="mt-10 text-center">
-                    <button onclick="revealAnswer('question-2', '2C')" class="reveal-button bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105 flex items-center justify-center mx-auto">
-                        <i data-lucide="check-square" class="w-5 h-5 mr-2"></i>
-                        Mostrar Respuesta Correcta
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Pregunta 3 -->
-        <div class="slide-container">
-            <div class="slide">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-3xl font-bold text-orange-600">Pregunta 3/5</h2>
-                    <i data-lucide="type" class="w-8 h-8 text-blue-500"></i>
-                </div>
-                <p class="question-text">
-                    ¿Cuál es el propósito principal de la **producción textual creativa**?
-                </p>
-
-                <div class="options-grid mt-8" id="question-3">
-                    <div class="option-card" data-correct="false" data-answer-id="3A">
-                        <span class="mr-3 font-bold text-orange-500">A.</span>
-                        <p>Escribir sin sentido</p>
-                    </div>
-                    <div class="option-card" data-correct="false" data-answer-id="3B">
-                        <span class="mr-3 font-bold text-orange-500">B.</span>
-                        <p>Imitar a otros autores</p>
-                    </div>
-                    <div class="option-card" data-correct="true" data-answer-id="3C">
-                        <span class="mr-3 font-bold text-orange-500">C.</span>
-                        <p>Expresar ideas propias de manera original</p>
-                    </div>
-                    <div class="option-card" data-correct="false" data-answer-id="3D">
-                        <span class="mr-3 font-bold text-orange-500">D.</span>
-                        <p>Evitar la subjetividad</p>
-                    </div>
-                </div>
-
-                <div class="mt-10 text-center">
-                    <button onclick="revealAnswer('question-3', '3C')" class="reveal-button bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105 flex items-center justify-center mx-auto">
-                        <i data-lucide="check-square" class="w-5 h-5 mr-2"></i>
-                        Mostrar Respuesta Correcta
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Pregunta 4 -->
-        <div class="slide-container">
-            <div class="slide">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-3xl font-bold text-orange-600">Pregunta 4/5</h2>
-                    <i data-lucide="trending-up" class="w-8 h-8 text-blue-500"></i>
-                </div>
-                <p class="question-text">
-                    Según García y García (2018), la creatividad se asocia con:
-                </p>
-
-                <div class="options-grid mt-8" id="question-4">
-                    <div class="option-card" data-correct="false" data-answer-id="4A">
-                        <span class="mr-3 font-bold text-orange-500">A.</span>
-                        <p>La pasividad del estudiante</p>
-                    </div>
-                    <div class="option-card" data-correct="true" data-answer-id="4B">
-                        <span class="mr-3 font-bold text-orange-500">B.</span>
-                        <p>El rendimiento académico y la motivación</p>
-                    </div>
-                    <div class="option-card" data-correct="false" data-answer-id="4C">
-                        <span class="mr-3 font-bold text-orange-500">C.</span>
-                        <p>La rigidez del currículo</p>
-                    </div>
-                    <div class="option-card" data-correct="false" data-answer-id="4D">
-                        <span class="mr-3 font-bold text-orange-500">D.</span>
-                        <p>El silencio en el aula</p>
-                    </div>
-                </div>
-
-                <div class="mt-10 text-center">
-                    <button onclick="revealAnswer('question-4', '4B')" class="reveal-button bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105 flex items-center justify-center mx-auto">
-                        <i data-lucide="check-square" class="w-5 h-5 mr-2"></i>
-                        Mostrar Respuesta Correcta
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Pregunta 5 -->
-        <div class="slide-container">
-            <div class="slide">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-3xl font-bold text-orange-600">Pregunta 5/5</h2>
-                    <i data-lucide="zap" class="w-8 h-8 text-blue-500"></i>
-                </div>
-                <p class="question-text">
-                    En el contexto educativo, ¿qué favorece la **innovación** según Martínez, Barrios y Torregroza (2023)?
-                </p>
-
-                <div class="options-grid mt-8" id="question-5">
-                    <div class="option-card" data-correct="true" data-answer-id="5A">
-                        <span class="mr-3 font-bold text-orange-500">A.</span>
-                        <p>El uso de la gamificación y el aprendizaje activo</p>
-                    </div>
-                    <div class="option-card" data-correct="false" data-answer-id="5B">
-                        <span class="mr-3 font-bold text-orange-500">B.</span>
-                        <p>El trabajo individual y repetitivo</p>
-                    </div>
-                    <div class="option-card" data-correct="false" data-answer-id="5C">
-                        <span class="mr-3 font-bold text-orange-500">C.</span>
-                        <p>La enseñanza tradicional</p>
-                    </div>
-                    <div class="option-card" data-correct="false" data-answer-id="5D">
-                        <span class="mr-3 font-bold text-orange-500">D.</span>
-                        <p>El exceso de teoría</p>
-                    </div>
-                </div>
-
-                <div class="mt-10 text-center">
-                    <button onclick="revealAnswer('question-5', '5A')" class="reveal-button bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105 flex items-center justify-center mx-auto">
-                        <i data-lucide="check-square" class="w-5 h-5 mr-2"></i>
-                        Mostrar Respuesta Correcta
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Última Diapositiva: Cierre -->
-        <div class="slide-container closing-slide">
-            <div class="slide text-center flex flex-col justify-center items-center">
-                <h2 class="text-5xl font-extrabold text-white mb-6">¡Gracias por participar!</h2>
-                
-                <div class="p-8 bg-white/90 rounded-xl shadow-2xl backdrop-blur-sm">
-                    <p class="text-3xl font-semibold text-gray-800 mb-6">
-                        ¡Sigue creando, imaginando y escribiendo!
-                    </p>
-                    <div class="flex justify-center items-center">
-                        <i data-lucide="lightbulb" class="w-12 h-12 text-yellow-500 fill-yellow-300 stroke-yellow-600 mr-4"></i>
-                        <span class="text-5xl text-orange-600 font-black">💡✨</span>
-                    </div>
-                </div>
-
-                <p class="mt-8 text-xl text-gray-700 italic">
-                    Esperamos que este juego haya encendido tu chispa creativa.
-                </p>
-            </div>
-        </div>
+  <!-- Header/Nav -->
+  <header class="hero sticky top-0 z-30 bg-white/60">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <i data-lucide="sparkles" class="w-7 h-7 text-amber-500"></i>
+        <p class="text-sm md:text-base text-slate-700">
+          <span class="font-semibold text-slate-900">Juego Interactivo:</span> Creatividad Lingüística y Producción Textual
+        </p>
+      </div>
+      <div class="hidden sm:flex items-center gap-2 text-sm text-slate-600">
+        <i data-lucide="user-pen" class="w-4 h-4"></i>
+        Diseñado por <span class="font-semibold text-slate-900">Katherine Giraldo Zuluaga</span>
+      </div>
     </div>
+  </header>
 
-    <script>
-        // Inicialización de Lucide Icons para renderizar los SVG
-        lucide.createIcons();
+  <!-- Contenido -->
+  <main class="max-w-5xl mx-auto px-4 py-8 sm:py-12">
 
-        // Función para revelar la respuesta correcta en una pregunta específica
-        function revealAnswer(questionId, correctOptionId) {
-            const questionContainer = document.getElementById(questionId);
-            const correctOption = questionContainer.querySelector(`[data-answer-id="${correctOptionId}"]`);
-            const revealButton = questionContainer.closest('.slide').querySelector('.reveal-button');
+    <!-- Portada -->
+    <section class="card p-6 sm:p-10 mb-8">
+      <div class="grid md:grid-cols-2 gap-8 items-center">
+        <div>
+          <h1 class="text-3xl md:text-5xl font-black tracking-tight text-slate-900">
+            Juego Interactivo
+          </h1>
+          <h2 class="text-xl md:text-2xl mt-3 font-semibold text-blue-700">
+            Creatividad Lingüística y Producción Textual
+          </h2>
+          <p class="mt-4 text-slate-600">
+            Pon a prueba tus conocimientos con preguntas sobre creatividad en el lenguaje, producción textual
+            y propuestas de innovación educativa. Recibirás retroalimentación inmediata en cada intento.
+          </p>
+          <div class="mt-6 flex flex-wrap gap-3">
+            <button id="btnStart" class="btn btn-primary">
+              <i data-lucide="play-circle"></i> Comenzar
+            </button>
+            <button id="btnInstrucciones" class="btn btn-muted">
+              <i data-lucide="info"></i> Instrucciones
+            </button>
+          </div>
+        </div>
+        <figure>
+          <!-- Imagen libre (Unsplash) relacionada -->
+          <div class="hero-img"
+               style="background-image:url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=1600&auto=format&fit=crop');">
+          </div>
+          <figcaption class="caption mt-2">
+            Foto: Thought Catalog / Unsplash (escritura creativa).
+          </figcaption>
+        </figure>
+      </div>
+    </section>
 
-            if (correctOption) {
-                // Remueve cualquier clase de resaltado anterior
-                questionContainer.querySelectorAll('.option-card').forEach(opt => {
-                    opt.classList.remove('is-correct');
-                    // Devuelve el color de texto a las opciones incorrectas para contrastar
-                    if (opt.dataset.answerId !== correctOptionId) {
-                         opt.querySelector('span').classList.remove('text-white');
-                         opt.querySelector('span').classList.add('text-orange-500');
-                         opt.querySelector('p').classList.remove('text-white', 'font-medium');
-                    }
-                });
+    <!-- Barra de progreso + marcador -->
+    <section class="mb-6 hidden" id="statusBar">
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-sm text-slate-600">
+          Pregunta <span id="labelIndex" class="font-semibold">1</span> de <span id="labelTotal">5</span>
+        </div>
+        <div class="text-sm text-slate-600">
+          Puntaje: <span id="labelScore" class="font-bold text-slate-900">0</span>
+        </div>
+      </div>
+      <div class="progress"><span id="progressFill" style="width:0%"></span></div>
+    </section>
 
-                // Aplica la clase de respuesta correcta
-                correctOption.classList.add('is-correct');
-                correctOption.querySelector('span').classList.remove('text-orange-500');
-                correctOption.querySelector('span').classList.add('text-white');
-                correctOption.querySelector('p').classList.add('text-white', 'font-medium');
+    <!-- Contenedor preguntas -->
+    <section class="space-y-8" id="quizContainer" aria-live="polite"></section>
 
-                // Opcional: Deshabilita el botón de revelar después de un clic
-                if (revealButton) {
-                    revealButton.textContent = '¡Respuesta Revelada!';
-                    revealButton.classList.remove('bg-blue-500', 'hover:bg-blue-600');
-                    revealButton.classList.add('bg-gray-400', 'cursor-not-allowed');
-                    revealButton.disabled = true;
-                }
-            }
-        }
+    <!-- Controles -->
+    <section class="mt-4 flex items-center justify-between hidden" id="controls">
+      <button id="btnPrev" class="btn btn-muted">
+        <i data-lucide="chevron-left"></i> Anterior
+      </button>
+      <div class="flex gap-3">
+        <button id="btnReveal" class="btn btn-muted">
+          <i data-lucide="check-square"></i> Revelar correcta
+        </button>
+        <button id="btnNext" class="btn btn-primary">
+          Siguiente <i data-lucide="chevron-right"></i>
+        </button>
+      </div>
+    </section>
 
-        // Lógica de interacción de clic (Mantenida, pero no funcionalmente necesaria)
-        document.addEventListener('DOMContentLoaded', () => {
-            const options = document.querySelectorAll('.option-card');
-            
-            options.forEach(option => {
-                // Quitar cualquier resaltado inicial que estaba en la versión anterior
-                option.classList.remove('correct-answer');
-                
-                // La interacción de clic simple se puede mantener solo visualmente si se desea
-                option.addEventListener('click', (e) => {
-                    // Si ya se reveló la respuesta, no permitir más interacciones
-                    if (option.closest('.slide').querySelector('.reveal-button')?.disabled) return;
-                    
-                    const slide = option.closest('.slide');
-                    const optionsInSlide = slide.querySelectorAll('.option-card');
+    <!-- Resultado final -->
+    <section id="resultCard" class="card p-8 mt-10 hidden text-center">
+      <div class="flex flex-col items-center gap-4">
+        <i data-lucide="trophy" class="w-12 h-12 text-yellow-500"></i>
+        <h3 class="text-2xl font-black">¡Gracias por participar!</h3>
+        <p class="text-slate-600 text-lg">Sigue creando, imaginando y escribiendo 💡✨</p>
+        <p class="text-slate-700">
+          Tu puntaje: <span id="finalScore" class="font-extrabold text-blue-700"></span> / <span id="finalTotal">5</span>
+        </p>
+        <div class="mt-2">
+          <button id="btnRestart" class="btn btn-primary">
+            <i data-lucide="rotate-ccw"></i> Volver a jugar
+          </button>
+        </div>
+      </div>
+    </section>
 
-                    // Resetear la selección visual previa
-                    optionsInSlide.forEach(opt => {
-                        opt.classList.remove('selected-by-student');
-                        opt.style.opacity = '1';
-                    });
+    <!-- Galería de apoyo visual (temática del curso) -->
+    <section class="mt-12">
+      <h4 class="text-sm uppercase tracking-widest text-slate-500 font-semibold mb-3">
+        Inspiración visual
+      </h4>
+      <div class="grid sm:grid-cols-3 gap-4">
+        <figure class="card overflow-hidden">
+          <img src="https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=1200&auto=format&fit=crop"
+               alt="Ideas y creatividad" class="w-full h-44 object-cover"/>
+          <figcaption class="caption p-3">Ideas & creatividad — Unsplash</figcaption>
+        </figure>
+        <figure class="card overflow-hidden">
+          <img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=1200&auto=format&fit=crop"
+               alt="Estudiantes escribiendo" class="w-full h-44 object-cover"/>
+          <figcaption class="caption p-3">Estudiantes — Unsplash</figcaption>
+        </figure>
+        <figure class="card overflow-hidden">
+          <img src="https://images.unsplash.com/photo-1513258496099-48168024aec0?q=80&w=1200&auto=format&fit=crop"
+               alt="Libros y lenguaje" class="w-full h-44 object-cover"/>
+          <figcaption class="caption p-3">Lenguaje — Unsplash</figcaption>
+        </figure>
+      </div>
+    </section>
 
-                    // Marcar la opción seleccionada por el estudiante (solo visual)
-                    option.classList.add('selected-by-student');
-                });
-            });
+  </main>
+
+  <footer class="mt-12 pb-10 text-center text-xs text-slate-500">
+    © <span id="year"></span> • Diseñado por <strong>Katherine Giraldo Zuluaga</strong>.
+  </footer>
+
+  <script>
+    lucide.createIcons();
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // ---------- Datos del cuestionario (mantienen tu contenido base) ----------
+    const QUESTIONS = [
+      {
+        id: 1,
+        title: "Pregunta 1/5",
+        image: "https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?q=80&w=1600&auto=format&fit=crop",
+        imageAlt: "Creatividad lingüística",
+        prompt: "¿Qué es la creatividad lingüística?",
+        options: [
+          { key: "A", text: "La capacidad de repetir oraciones correctamente", correct: false },
+          { key: "B", text: "La habilidad de jugar con el lenguaje para crear expresiones nuevas", correct: true },
+          { key: "C", text: "El uso rígido de las normas gramaticales", correct: false },
+          { key: "D", text: "La memorización de textos", correct: false }
+        ]
+      },
+      {
+        id: 2,
+        title: "Pregunta 2/5",
+        image: "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=1600&auto=format&fit=crop",
+        imageAlt: "Aula creativa",
+        prompt: "¿Qué elemento fomenta la creatividad en el aula según Elisondo (2015)?",
+        options: [
+          { key: "A", text: "La repetición constante", correct: false },
+          { key: "B", text: "El castigo ante el error", correct: false },
+          { key: "C", text: "El ambiente flexible y motivador", correct: true },
+          { key: "D", text: "Las tareas mecánicas", correct: false }
+        ]
+      },
+      {
+        id: 3,
+        title: "Pregunta 3/5",
+        image: "https://images.unsplash.com/photo-1526318472351-c75fcf070305?q=80&w=1600&auto=format&fit=crop",
+        imageAlt: "Producción textual creativa",
+        prompt: "¿Cuál es el propósito principal de la producción textual creativa?",
+        options: [
+          { key: "A", text: "Escribir sin sentido", correct: false },
+          { key: "B", text: "Imitar a otros autores", correct: false },
+          { key: "C", text: "Expresar ideas propias de manera original", correct: true },
+          { key: "D", text: "Evitar la subjetividad", correct: false }
+        ]
+      },
+      {
+        id: 4,
+        title: "Pregunta 4/5",
+        image: "https://images.unsplash.com/photo-1537202108838-e7072bad1927?q=80&w=1600&auto=format&fit=crop",
+        imageAlt: "Rendimiento y motivación",
+        prompt: "Según García y García (2018), la creatividad se asocia con:",
+        options: [
+          { key: "A", text: "La pasividad del estudiante", correct: false },
+          { key: "B", text: "El rendimiento académico y la motivación", correct: true },
+          { key: "C", text: "La rigidez del currículo", correct: false },
+          { key: "D", text: "El silencio en el aula", correct: false }
+        ]
+      },
+      {
+        id: 5,
+        title: "Pregunta 5/5",
+        image: "https://images.unsplash.com/photo-1513258496099-48168024aec0?q=80&w=1600&auto=format&fit=crop",
+        imageAlt: "Innovación educativa",
+        prompt: "En el contexto educativo, ¿qué favorece la innovación según Martínez, Barrios y Torregroza (2023)?",
+        options: [
+          { key: "A", text: "El uso de la gamificación y el aprendizaje activo", correct: true },
+          { key: "B", text: "El trabajo individual y repetitivo", correct: false },
+          { key: "C", text: "La enseñanza tradicional", correct: false },
+          { key: "D", text: "El exceso de teoría", correct: false }
+        ]
+      }
+    ];
+
+    // ---------- Estado ----------
+    let index = 0;
+    let score = 0;
+    const total = QUESTIONS.length;
+
+    const quizContainer = document.getElementById('quizContainer');
+    const statusBar = document.getElementById('statusBar');
+    const controls = document.getElementById('controls');
+    const resultCard = document.getElementById('resultCard');
+
+    const labelIndex = document.getElementById('labelIndex');
+    const labelTotal = document.getElementById('labelTotal');
+    const labelScore = document.getElementById('labelScore');
+    const progressFill = document.getElementById('progressFill');
+    const finalScore = document.getElementById('finalScore');
+    const finalTotal = document.getElementById('finalTotal');
+
+    labelTotal.textContent = total;
+    finalTotal.textContent = total;
+
+    // ---------- Render ----------
+    function renderQuestion(i){
+      const q = QUESTIONS[i];
+      labelIndex.textContent = i + 1;
+      progressFill.style.width = `${((i)/total)*100}%`;
+
+      quizContainer.innerHTML = `
+        <article class="card overflow-hidden">
+          <div class="md:grid md:grid-cols-2">
+            <div class="p-6 sm:p-8">
+              <div class="flex items-center justify-between">
+                <h3 class="text-lg font-bold uppercase tracking-wider text-amber-600">${q.title}</h3>
+                <i data-lucide="book-open-check" class="w-6 h-6 text-blue-500"></i>
+              </div>
+              <h4 class="text-2xl md:text-3xl font-extrabold mt-2 text-slate-900">${q.prompt}</h4>
+
+              <div class="mt-6 grid gap-3">
+                ${q.options.map(opt => `
+                  <button class="option rounded-xl p-4 text-left focus-visible:outline-none"
+                          data-key="${opt.key}" data-correct="${opt.correct}" aria-label="Opción ${opt.key}">
+                    <div class="flex items-start gap-3">
+                      <span class="badge inline-flex items-center justify-center h-8 w-8 rounded-full font-bold bg-slate-200 text-slate-700">${opt.key}</span>
+                      <p class="leading-snug text-slate-800">${opt.text}</p>
+                    </div>
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+
+            <figure class="hidden md:block relative">
+              <img src="${q.image}" alt="${q.imageAlt}"
+                   class="w-full h-full object-cover"/>
+              <figcaption class="absolute bottom-2 right-3 backdrop-blur bg-white/70 rounded px-2 py-1 caption">
+                Imagen de apoyo — Unsplash
+              </figcaption>
+            </figure>
+          </div>
+        </article>
+      `;
+      lucide.createIcons();
+      bindOptions();
+    }
+
+    // ---------- Lógica de interacción ----------
+    let revealed = false;
+
+    function bindOptions(){
+      revealed = false;
+      const buttons = [...document.querySelectorAll('.option')];
+
+      buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          if(revealed) return;
+          const isCorrect = btn.dataset.correct === "true";
+
+          if(isCorrect){
+            score += 1;
+            btn.classList.add('correct','pulse');
+          } else {
+            btn.classList.add('incorrect','shake');
+            // marcar correcta para retroalimentación inmediata
+            const good = buttons.find(b => b.dataset.correct === "true");
+            good.classList.add('correct','pulse');
+          }
+          revealed = true;
+          labelScore.textContent = score;
         });
-    </script>
+
+        // Accesibilidad con teclado
+        btn.addEventListener('keydown', (e) => {
+          if(e.key === 'Enter' || e.key === ' '){
+            e.preventDefault();
+            btn.click();
+          }
+        });
+      });
+    }
+
+    // ---------- Navegación ----------
+    function goNext(){
+      if(index < total - 1){
+        index++;
+        renderQuestion(index);
+        progressFill.style.width = `${(index/total)*100}%`;
+      } else {
+        // Termina
+        progressFill.style.width = `100%`;
+        quizContainer.innerHTML = '';
+        controls.classList.add('hidden');
+        resultCard.classList.remove('hidden');
+        finalScore.textContent = score;
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function goPrev(){
+      if(index > 0){
+        index--;
+        renderQuestion(index);
+        progressFill.style.width = `${(index/total)*100}%`;
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function reveal(){
+      if(revealed) return;
+      const buttons = [...document.querySelectorAll('.option')];
+      const good = buttons.find(b => b.dataset.correct === "true");
+      buttons.forEach(b => {
+        if(b === good) b.classList.add('correct','pulse');
+        else b.classList.add('incorrect');
+      });
+      revealed = true;
+    }
+
+    // --------- Controles y acciones ---------
+    document.getElementById('btnStart').addEventListener('click', () => {
+      statusBar.classList.remove('hidden');
+      controls.classList.remove('hidden');
+      index = 0; score = 0;
+      labelScore.textContent = 0;
+      renderQuestion(index);
+    });
+
+    document.getElementById('btnInstrucciones').addEventListener('click', () => {
+      alert(
+`¿Cómo jugar?
+• Haz clic en una opción para responder.
+• Recibirás retroalimentación inmediata (verde = correcta, rojo = incorrecta).
+• Usa “Revelar correcta” si deseas mostrar la respuesta.
+• Navega con “Anterior” y “Siguiente”.
+• Al final verás tu puntaje total.`
+      );
+    });
+
+    document.getElementById('btnPrev').addEventListener('click', goPrev);
+    document.getElementById('btnNext').addEventListener('click', goNext);
+    document.getElementById('btnReveal').addEventListener('click', reveal);
+    document.getElementById('btnRestart')?.addEventListener('click', () => {
+      // reiniciar
+      resultCard.classList.add('hidden');
+      statusBar.classList.remove('hidden');
+      controls.classList.remove('hidden');
+      index = 0; score = 0; labelScore.textContent = 0;
+      renderQuestion(index);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Render inicial (solo portada visible)
+  </script>
 </body>
 </html>
