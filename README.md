@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8" />
-    <title>sistemax.onion — Asistente virtual para Python básico</title>
+    <title>MetroVida — Asistente del Metro de Medellín</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
         /* SECTION: Design Tokens */
@@ -212,10 +212,10 @@
     <div class="app-shell">
         <header class="header">
             <div class="brand">
-                <div class="brand-mark">sy</div>
+                <div class="brand-mark">MV</div>
                 <div class="brand-text">
-                    <div class="brand-name">sistemax.onion</div>
-                    <div style="font-size: 0.7rem; color: var(--color-text-muted);">Tutor de Python Básico</div>
+                    <div class="brand-name">MetroVida</div>
+                    <div style="font-size: 0.7rem; color: var(--color-text-muted);">Asistente de movilidad y apoyo seguro</div>
                 </div>
             </div>
             <div class="header-badge">Online</div>
@@ -224,25 +224,25 @@
         <main class="chat-container">
             <div class="chat-messages" id="chatMessages">
                 <div class="message bot">
-                    ¡Hola! Soy <strong>sistemax.onion</strong>. Mi misión es ayudarte a dominar los fundamentos de Python de forma clara y sin complicaciones. <br><br>
-                    ¿Qué concepto te gustaría explorar hoy? Podemos hablar de variables, listas, bucles o funciones.
+                    ¡Hola! Soy <strong>MetroVida</strong>. Te ayudo a planear rutas en el Metro de Medellín con información clara y práctica. <br><br>
+                    También puedo compartir horarios oficiales, canales de atención y acompañarte con recursos de ayuda inmediata si estás pasando por un momento difícil.
                 </div>
             </div>
             
             <div class="suggestions" id="suggestions">
-                <div class="chip" onclick="sendSuggestion('¿Qué es una variable en Python?')">¿Qué es una variable?</div>
-                <div class="chip" onclick="sendSuggestion('Dame un reto de bucles for')">Reto de bucles for</div>
-                <div class="chip" onclick="sendSuggestion('Explica las funciones básicas')">Explicar funciones</div>
+                <div class="chip" onclick="sendSuggestion('¿Cuál es el horario del Metro de Medellín hoy?')">Horario del sistema</div>
+                <div class="chip" onclick="sendSuggestion('Necesito una ruta de San Antonio a Niquía')">Ruta San Antonio → Niquía</div>
+                <div class="chip" onclick="sendSuggestion('¿Cómo contacto la Línea Hola Metro?')">Contacto Hola Metro</div>
             </div>
 
             <form class="chat-input-area" id="chatForm">
-                <input type="text" class="chat-input" id="userInput" placeholder="Escribe tu duda sobre Python aquí..." autocomplete="off">
+                <input type="text" class="chat-input" id="userInput" placeholder="Escribe tu consulta sobre rutas o Metro de Medellín..." autocomplete="off">
                 <button type="submit" class="send-btn" id="sendBtn">Enviar</button>
             </form>
         </main>
 
         <footer style="text-align: center; font-size: 0.75rem; color: var(--color-text-muted);">
-            sistemax.onion — IA Educativa especializada en Python Básico
+            MetroVida — Asistente de información del Metro de Medellín
         </footer>
     </div>
 
@@ -254,27 +254,51 @@
         const sendBtn = document.getElementById('sendBtn');
 
         // Configuración de la Identidad de la IA
+        const metroVidaConfig = {
+            id: "metro-vida-medellin-v1",
+            language: "es-CO",
+            persona: {
+                name: "MetroVida",
+                tone: ["claro", "empático", "no-juicioso", "práctico"]
+            },
+            officialContacts: {
+                holaMetro: "(604) 444 95 98",
+                holaMetroE164: "+576044449598",
+                emergency: "123",
+                mentalHealth: "106",
+                pqrsdf: "contactenos@metrodemedellin.gov.co"
+            },
+            safetyRules: [
+                "No inventar rutas: solo resultados del motor determinístico.",
+                "Si faltan estaciones, pedir al usuario elegir de una lista.",
+                "Si no hay integración de tiempo real, decirlo explícitamente.",
+                "En crisis, priorizar seguridad y recursos oficiales."
+            ]
+        };
+
         const systemPrompt = `
-            Eres un asistente virtual inteligente y amigable llamado sistemax.onion.
-            TU OBJETIVO: Ayudar a estudiantes a aprender conceptos básicos de Python (variables, tipos de datos, bucles, funciones, listas, diccionarios, condicionales).
-            
-            TONO: Profesional pero casual. Mezcla precisión técnica con cercanía.
-            
-            CAPACIDADES:
-            1. Explicar conceptos básicos de Python de forma sencilla.
-            2. Proponer ejercicios prácticos y retos cortos de código.
-            3. Dar pistas y guiar al usuario sin darle la respuesta completa de inmediato.
-            
-            LIMITACIONES (ESTRICTAS):
-            1. No respondas sobre temas que no sean de Python Básico.
-            2. No escribas tareas o proyectos completos para el usuario. Solo puedes guiar, dar conceptos clave y pequeños ejemplos de sintaxis.
-            3. Si el usuario pide un proyecto entero, dile amablemente que tu función es enseñarle para que él pueda construirlo.
-            
-            FORMATO:
-            - Respuestas de 2 a 4 párrafos para dudas simples.
-            - Usa listas con viñetas para pasos o características.
-            - Siempre incluye ejemplos de código breves usando bloques de Markdown.
-        `;
+Eres ${metroVidaConfig.persona.name}, asistente del Metro de Medellín.
+Tono: claro, empático, no-juicioso y práctico.
+
+Reglas obligatorias:
+- Nunca inventes rutas ni estados en tiempo real.
+- Si no se encuentra una estación, pide desambiguar con opciones.
+- Si no hay integración oficial de tiempo real, dilo explícitamente.
+- En crisis emocional o riesgo, primero seguridad y recursos (123 y 106); después continúas con rutas si aplica.
+- No solicites datos personales innecesarios ni uses IP para ubicar personas.
+
+Datos oficiales que sí puedes citar:
+- Línea Hola Metro: (604) 444 95 98 (L–V 04:30–22:00; Sáb 09:00–17:00).
+- Correo PQRSDF: contactenos@metrodemedellin.gov.co.
+- Horario general del sistema: Lunes a sábado 04:30–23:00.
+- Domingos y festivos: A/B/T-A/O/1/2 05:00–22:00; K 08:30–22:00; H/J/M/P 09:00–22:00.
+- Línea L (Arví): Mar–Sáb 09:00–18:00; Dom/Fest 08:30–18:00; no opera el primer día hábil de la semana.
+
+Forma de responder:
+- Breve, accionable y amable.
+- Si hay ambigüedad, pide solo el dato mínimo faltante.
+- Si hay riesgo alto, invita a llamar 123 o 106 de inmediato.
+`;
 
         let chatHistory = [];
 
@@ -297,7 +321,7 @@
                     });
                     if (!response.ok) throw new Error('Network error');
                     const data = await response.json();
-                    return data.candidates?.[0]?.content?.parts?.[0]?.text || "Lo siento, tuve un problema procesando eso.";
+                    return data.candidates?.[0]?.content?.parts?.[0]?.text || "Lo siento, tuve un problema procesando tu consulta.";
                 } catch (error) {
                     const delay = Math.pow(2, i) * 1000;
                     await new Promise(resolve => setTimeout(resolve, delay));
